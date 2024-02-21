@@ -1,26 +1,31 @@
 import pandas as pd
 import torch
 from torch_pso import ParticleSwarmOptimizer
-from sklearn.model_selection import train_test_split
 import torch.nn as nn
 import torch.optim as optim
+import DataNormalisation as dn
 
 # Check if GPU is available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Load data
-data = pd.read_csv('Dataset/TON_IoT/Train_Test_Network.csv')
-print("Loaded data")
+# Define the model
+class MyNeuralNetwork(nn.Module):
+    def __init__(self):
+        super(MyNeuralNetwork, self).__init__()
+        self.layer1 = nn.Linear(30, 73)  # First hidden layer with 73 neurons
+        self.layer2 = nn.Linear(73, 69)  # Second hidden layer with 69 neurons
+        self.layer3 = nn.Linear(69, 2)   # Output layer with 2 neurons
 
-# Select the features to use
-data.drop(["ts", "src_ip", "dst_ip", ""], axis=1, inplace=True)
+    def forward(self, x):
+        x = torch.relu(self.layer1(x))
+        x = torch.relu(self.layer2(x))
+        x = self.layer3(x)
+        return x
 
-# Split data into train/test(70/30) split
-train, test = train_test_split(data, test_size=0.3, random_state=42, shuffle=True)
-print("Split the dataset into train and test")
+#process the data and get the train test split
+train, test = dn.processData()
 
-# Drop the labels from train data
-train = train.drop(train.columns[-1], axis=1)
-
-train = torch.from_numpy(train.values).float().to(device)
-test = torch.from_numpy(test.values).float().to(device)
+print(train.head())
+print(test.head())
+train_tensor = torch.tensor(train.values)
+test = torch.tensor(test.values)
