@@ -27,13 +27,16 @@ def processData():
     data['http_method'] = data['http_method'].replace({'-': 0, 'GET': 1, 'HEAD': 2, 'POST': 3}, regex=True)
     data['weird_name'] = data['weird_name'].replace({'-': 0, '.*': 1}, regex=True)
     data['weird_addl'] = data['weird_addl'].replace({'-': 0}, regex=True)
+    data['weird_addl'] = data['weird_addl'].astype(int)
 
-    #print(data['http_trans_depth'].unique())
+    #print(data['weird_addl'].unique())
 
     # Split data into train/test(70/30) split
     train, test = train_test_split(data, test_size=0.3, random_state=42, shuffle=True)
     print("Split the dataset into train and test")
     # Drop the labels from train data
-    test = test.drop(train.columns[-2], axis=1)
+    labels = train['label']
+    train = train.drop(train.columns[-1], axis=1)
+    test = test.drop(test.columns[-1], axis=1)
     #print(train.dtypes)
-    return train, test
+    return train, test, labels
