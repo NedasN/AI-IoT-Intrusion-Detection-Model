@@ -34,6 +34,6 @@ def processData():
     train, test = train_test_split(data, test_size=0.3, random_state=42, shuffle=True)
     print("Split the dataset into train and test")
     # Drop the labels from train data
-    train = train.drop(train.columns[-2], axis=1)
+    test = test.drop(train.columns[-2], axis=1)
     #print(train.dtypes)
     return train, test
