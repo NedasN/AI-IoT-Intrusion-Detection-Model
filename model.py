@@ -1,12 +1,15 @@
 import pandas as pd
 import torch
-from torch_pso import ParticleSwarmOptimizer
+import torchswarm
 import torch.nn as nn
 import torch.optim as optim
 import DataNormalisation as dn
 
+#swap to torchswarm instead of toch_pso
+
 # Check if GPU is available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+#print(torch.cuda.is_available())
 
 # Define the model
 class MyNeuralNetwork(nn.Module):
@@ -23,6 +26,8 @@ class MyNeuralNetwork(nn.Module):
         x = self.layer1(x)
         x = torch.relu(x)
         x = self.layer2(x)
+        x = torch.relu(x)
+        x = self.layer3(x)
         x = torch.sigmoid(x)
         return x
 
@@ -35,35 +40,19 @@ train_tensor, target_tensor = dn.processData()
 
 #Model and optimiser
 model = MyNeuralNetwork()
-
-optim = ParticleSwarmOptimizer(
-    model.parameters(),
-    inertial_weight=0.5,
-    cognitive_coefficient= 0.8,
-    social_coefficient=0.7,
-    num_particles=1000,
-    max_param_value= 10000,
-    min_param_value=-10000
-)
+model.to(device)
 
 #print("Predictions",model(train_tensor))
 #print("Target", target_tensor)
 criterion = nn.CrossEntropyLoss()
+train_tensor = train_tensor.to(device)
+target_tensor = target_tensor.to(device)
+print(model(train_tensor))
 
-#print(model(train_tensor).size())
+#train the model
+for epoch in range(250):
+    #ask copilot on how to use torchswarm to train a neural network
 
-print("Got to before the loop")
-for epoch in range(500):
-    print("in the loop now")
-    def closure():
-        # Clear any grads from before the optimization step, since we will be changing the parameters
-        optim.zero_grad()
-        out = model(train_tensor)
-        #out = out.view(-1)
-        print("in Closure")
-        return criterion(out, target_tensor)
-    
-    optim.step(closure)
-    print(f"Epoch {epoch}/500")
+    print(f"Epoch {epoch+1}/500")
     #print('Prediction', model(train_tensor))
     #print('Target    ', target_tensor)
