@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 def processData():
     # Load data
     data = pd.read_csv('Dataset/TON_IoT/Train_Test_Network.csv')
-    print("Loaded data")
+    #print("Loaded data")
 
     # Select the features to use
     data.drop(["ts", "src_ip", "dst_ip", "http_user_agent", "http_orig_mime_types", "ssl_version", "ssl_cipher", "ssl_subject", "ssl_issuer", "http_uri", "http_version", 'http_user_agent', "http_orig_mime_types", "http_resp_mime_types", "weird_notice", "type"], axis=1, inplace=True)
