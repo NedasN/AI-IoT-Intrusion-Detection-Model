@@ -17,15 +17,14 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class MyNeuralNetwork(nn.Module):
     def __init__(self):
         super(MyNeuralNetwork, self).__init__()
-        self.layer1 = nn.Linear(30, 70, bias=True)  # First hidden layer with 70 neurons
-        self.layer2 = nn.Linear(70, 58, bias=True)  # Second hidden layer with 58 neurons
-        self.layer3 = nn.Linear(58, 42, bias=True)  # Third hidden layer with 42 neurons
-        self.layer4 = nn.Linear(42, 34, bias=True)  # fourth hidden layer with 34 neurons
-        self.layer5 = nn.Linear(34, 21, bias=True)  # sixth hidden layer with 21 neurons
-        self.layer6 = nn.Linear(21, 16, bias=True)  # seventh hidden layer with 16 neurons
-        self.layer7 = nn.Linear(16, 9, bias= True)  # eighth hidden layer with 9 neurons
-        self.layer8 = nn.Linear(9, 5, bias=True)    # ninth hidden layer with 5 neurons
-        self.layer9 = nn.Linear(5, 1, bias=True)    # output layer with 1 neuron
+        self.layer1 = nn.Linear(30, 30, bias=True)  # First hidden layer with 70 neurons
+        self.layer2 = nn.Linear(30, 25, bias=True)  # Second hidden layer with 58 neurons
+        self.layer3 = nn.Linear(25, 22, bias=True)  # Third hidden layer with 42 neurons
+        self.layer4 = nn.Linear(22, 18, bias=True)  # fourth hidden layer with 34 neurons
+        self.layer5 = nn.Linear(18, 13, bias=True)  # sixth hidden layer with 21 neurons
+        self.layer6 = nn.Linear(13, 9, bias=True)  # seventh hidden layer with 16 neurons
+        self.layer7 = nn.Linear(9, 5, bias=True)    # ninth hidden layer with 5 neurons
+        self.layer8 = nn.Linear(5, 1, bias=True)    # output layer with 1 neuron
 
     
     def forward(self, x):
@@ -39,8 +38,7 @@ class MyNeuralNetwork(nn.Module):
         x = torch.relu(self.layer5(x))
         x = torch.relu(self.layer6(x))
         x = torch.relu(self.layer7(x))
-        x = torch.relu(self.layer8(x))
-        x = self.layer9(x)
+        x = self.layer8(x)
         return torch.sigmoid(x)
 
 
@@ -52,73 +50,76 @@ train_tensor, target_tensor = dn.processData()
 
 #Model and optimiser
 model = MyNeuralNetwork()
-model.to(device)
+model = model.to(device)
 
 optim = ParticleSwarmOptimizer(model.parameters(),
-                            inertial_weight=0.7,
-                            cognitive_coefficient=0.8,
-                            social_coefficient=0.9,
-                            num_particles=1000,
-                            max_param_value=10000,
-                            min_param_value=-10000)
+                            inertial_weight=0.9,
+                            cognitive_coefficient=1.8,
+                            social_coefficient=2,
+                            num_particles=300,
+                            max_param_value=100,
+                            min_param_value=-100)
 
 #print("Predictions",model(train_tensor))
 #print("Target", target_tensor)
 #train_tensor = train_tensor.to(device)
 #target_tensor = target_tensor.to(device)
 #print(model(train_tensor))
+
+criterion = nn.MSELoss()
+best_loss = float('inf')
+best_model_wts = copy.deepcopy(model.state_dict())
+
 params = {
-        'batch_size': 4096,
-        'shuffle': True,
-        'num_workers': 6
-        }
+    'batch_size': 2046,
+    'shuffle': True,
+    }
 
 dataloader_train = iter(torch.utils.data.DataLoader(train_tensor, **params))
 dataloader_target = iter(torch.utils.data.DataLoader(target_tensor, **params))
 
 #train the model
-criterion = nn.MSELoss()
-best_loss = float('inf')
-best_model_wts = copy.deepcopy(model.state_dict())
 
 print("Started Training")
-for epoch in range(250):
+for epoch in range(700):
     try:
         train_batch = next(dataloader_train)
         target_batch = next(dataloader_target)
-        train_batch.to(device)
-        target_batch.to(device)
+        train_batch = train_batch.to(device)
+        target_batch = target_batch.to(device)
     except StopIteration:
         #If iterator runs out of batches we need to reset it to the start 
         dataloader_train = iter(torch.utils.data.DataLoader(train_tensor, **params))
         dataloader_target = iter(torch.utils.data.DataLoader(target_tensor, **params))
         train_batch = next(dataloader_train)
         target_batch = next(dataloader_target)
-        train_batch.to(device)
-        target_batch.to(device)
-    #change this:
-    with torch.no_grad():
-        output = model(train_batch)
-    def closure(modelOut, target_batch):
-        optim.zero_grad()
-        loss = criterion(modelOut, target_batch)
+        train_batch = train_batch.to(device)
+        target_batch = target_batch.to(device)
 
-        # Save if this is the best model we've seen so far
-        if loss < best_loss:
-            best_loss = loss
-            best_model_wts = copy.deepcopy(model.state_dict())
+    def closure():
+        optim.zero_grad()
+        global best_loss
+        global best_model_wts
+        with torch.no_grad():
+            output = model(train_batch)
+            loss = criterion(output, target_batch)
+
+            # Save if this is the best model we've seen so far
+            if loss < best_loss:
+                best_loss = loss
+                best_model_wts = copy.deepcopy(model.state_dict())
 
         return loss
     
-    optim.step(closure(output, target_batch))
+    optim.step(closure)
 
-    print(f"Epoch {epoch+1}/250")
-    
+    print(f"Epoch {epoch+1}/350, Loss: {best_loss}")
+
 print("Finished Training...")
 print("Evaluating best model...")
 model.load_state_dict(best_model_wts)
-train_tensor.to(device)
-target_tensor.to(device)
+train_tensor = train_tensor.to(device)
+target_tensor = target_tensor.to(device)
 with torch.no_grad():
     model.eval()  # Set the model to evaluation mode
     predictions = model(train_tensor)
