@@ -128,22 +128,3 @@ with torch.no_grad():
     total_samples = target_tensor.size(0)
     accuracy = correct_predictions / total_samples * 100.0
     print(f"Accuracy of the best model: {accuracy:.2f}%")
-
-'''
-for epoch in range(250):
-    def closure():
-        optim.zero_grad()
-        output = model(train_tensor)
-        loss = criterion(output, target_tensor)
-
-        # Save if this is the best model we've seen so far
-        if loss < best_loss:
-            best_loss = loss
-            best_model_wts = copy.deepcopy(model.state_dict())
-
-        return loss
-    
-    optim.step(closure)
-
-    print(f"Epoch {epoch+1}/250")
-'''

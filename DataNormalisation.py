@@ -46,7 +46,8 @@ def processData():
     '''
     #print(data[data.columns[0]].count())
     data.drop(data[(data['duration'] > 12000)].index, inplace=True)
-    list_to_normalise = ['duration', 'src_bytes', 'dst_bytes', 'missed_bytes', 'src_pkts', 'dst_pkts', 'src_ip_bytes', 'dst_ip_bytes']
+    #list_to_normalise = ['duration', 'src_bytes', 'dst_bytes', 'missed_bytes', 'src_pkts', 'dst_pkts', 'src_ip_bytes', 'dst_ip_bytes']
+    list_to_normalise = ['duration']
     for column in list_to_normalise:
         data[column] = (data[column] - data[column].mean()) / data[column].std()
     

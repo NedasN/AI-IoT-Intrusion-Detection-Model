@@ -5,8 +5,8 @@ import torch.nn as nn
 import torch.optim as optim
 import DataNormalisation as dn
 import numpy as np
+from torchmetrics.classification import BinaryAccuracy
 #swap to torchswarm instead of toch_pso
-
 # Check if GPU is available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #print(torch.cuda.is_available())
@@ -15,25 +15,23 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class MyNeuralNetwork(nn.Module):
     def __init__(self):
         super(MyNeuralNetwork, self).__init__()
-        self.layer1 = nn.Linear(30, 24, bias=True)  # First hidden layer with 70 neurons
-        self.layer2 = nn.Linear(24, 19, bias=True)  # Second hidden layer with 58 neurons
-        self.layer3 = nn.Linear(19, 14, bias=True)  # Third hidden layer with 42 neurons
-        self.layer4 = nn.Linear(14, 10, bias=True)  # fourth hidden layer with 34 neurons
-        self.layer5 = nn.Linear(10, 6, bias=True)  # sixth hidden layer with 21 neurons
-        self.layer6 = nn.Linear(6, 2, bias=True)  # seventh hidden layer with 16 neurons
+        self.layer1 = nn.Linear(30, 22, bias=True)  # First hidden layer with 70 neurons
+        self.layer2 = nn.Linear(22, 14, bias=True)  # Second hidden layer with 58 neurons
+        self.layer3 = nn.Linear(14, 6, bias=True)  # Third hidden layer with 42 neurons
+        self.layer4 = nn.Linear(6, 2, bias=True)  # fourth hidden layer with 34 neurons
+        #self.layer5 = nn.Linear(10, 6, bias=True)  # sixth hidden layer with 21 neurons
+        #self.layer6 = nn.Linear(6, 2, bias=True)  # seventh hidden layer with 16 neurons
         self.layer8 = nn.Linear(2, 1, bias=True)    # output layer with 1 neuron
 
     
     def forward(self, x):
-        x = self.layer1(x)
-        x = torch.relu(x)
-        x = self.layer2(x)
-        x = torch.relu(x)
-        x = self.layer3(x)
-        x = torch.relu(x)
-        x = torch.relu(self.layer4(x))
-        x = torch.relu(self.layer5(x))
-        x = torch.relu(self.layer6(x))
+        activation = nn.LeakyReLU(0.1)
+        x = activation(self.layer1(x))
+        x = activation(self.layer2(x))
+        x = activation(self.layer3(x))
+        x = activation(self.layer4(x))
+        #x = torch.relu(self.layer5(x))
+        #x = torch.relu(self.layer6(x))
         x = self.layer8(x)
         return x
 
@@ -66,9 +64,9 @@ train_tensor, target_tensor = dn.processData()
 #Model and optimiser
 model = MyNeuralNetwork()
 model.to(device)
-options = {'c1': 0.5, 'c2': 0.3, 'w':0.9}
+options = {'c1': 2, 'c2': 0.2, 'w':1.1, 'bounds':(100000,-100000)}
 dimensions = calculate_dimensions(model)
-optimizer = ps.single.GlobalBestPSO(n_particles=100, dimensions=dimensions, options=options)
+optimizer = ps.single.GlobalBestPSO(n_particles=1000, dimensions=dimensions, options=options)
 #print("Predictions",model(train_tensor))
 #print("Target", target_tensor)
 
@@ -76,11 +74,14 @@ train_tensor = train_tensor.to(device)
 target_tensor = target_tensor.float().to(device)
 #print(model(train_tensor))
 criterion = torch.nn.BCEWithLogitsLoss()
-cost, pos = optimizer.optimize(f, iters=1000, verbose=3)
-#train the model
-'''for epoch in range(250):
-    #ask copilot on how to use torchswarm to train a neural network
+cost, pos = optimizer.optimize(f, iters=400, verbose=3)
+# After training the model
 
-    print(f"Epoch {epoch+1}/250")
-    #print('Prediction', model(train_tensor))
-    #print('Target    ', target_tensor)'''
+with torch.no_grad():
+    model.eval()  # Set the model to evaluation mode
+    predictions = model(train_tensor)
+    predictions.squeeze_()
+    predictions = torch.sigmoid(predictions)
+    predictions = (predictions > 0.5).float()
+    calc_accuracy = BinaryAccuracy()
+    calc_accuracy(predictions, target_tensor)
