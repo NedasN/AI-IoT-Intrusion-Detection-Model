@@ -56,9 +56,9 @@ optim = ParticleSwarmOptimizer(model.parameters(),
                             inertial_weight=0.9,
                             cognitive_coefficient=1.8,
                             social_coefficient=2,
-                            num_particles=300,
-                            max_param_value=100,
-                            min_param_value=-100)
+                            num_particles=500,
+                            max_param_value=1000,
+                            min_param_value=-1000)
 
 #print("Predictions",model(train_tensor))
 #print("Target", target_tensor)

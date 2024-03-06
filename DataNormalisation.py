@@ -44,6 +44,16 @@ def processData():
     train_tensor = torch.tensor(train.values)
     target_tensor = torch.tensor(labels.values)
     '''
+    #print(data[data.columns[0]].count())
+    data.drop(data[(data['duration'] > 12000)].index, inplace=True)
+    list_to_normalise = ['duration', 'src_bytes', 'dst_bytes', 'missed_bytes', 'src_pkts', 'dst_pkts', 'src_ip_bytes', 'dst_ip_bytes']
+    for column in list_to_normalise:
+        data[column] = (data[column] - data[column].mean()) / data[column].std()
+    
+    #print(data.head(5))
+    #print(len(data.index))
+
+
     #Get the tensor of the data as well as the tensor containing target values
     #duration_tensor = torch.tensor(data['duration'].values)
     #num_bins = int(duration_tensor.size(0) ** 0.5)
@@ -56,3 +66,6 @@ def processData():
     #print(train_tensor.dtype)
     #print(target_tensor.dtype)
     return train_tensor, target_tensor
+
+
+#_,tensor = processData()
