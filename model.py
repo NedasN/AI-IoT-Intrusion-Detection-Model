@@ -6,7 +6,7 @@ import torch.optim as optim
 import DataNormalisation as dn
 import numpy as np
 from torchmetrics.classification import BinaryAccuracy
-#swap to torchswarm instead of toch_pso
+#swap to pyswarm instead of toch_pso
 # Check if GPU is available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #print(torch.cuda.is_available())
@@ -43,17 +43,37 @@ def calculate_dimensions(model):
 
 def f(x):
     n_particles = x.shape[0]
+    #n_particles = 50
     losses = []
-    chunks = sum([torch.numel(param) for param in model.parameters()])
-    for i in range(n_particles):
-        single_param = list(torch.chunk(torch.tensor(x[i]), int(chunks)))
-        for param, target_param in zip(model.parameters(), single_param):
-            param.data.copy_(target_param.clone())
-        prediction = model(train_tensor)
-        prediction.squeeze_()
-        loss = criterion(prediction, target_tensor)
-        losses.append(loss.item())
+    with torch.no_grad():
+        chunks = sum([torch.numel(param) for param in model.parameters()])
+        for i in range(n_particles):
+            single_param = list(torch.chunk(torch.tensor(x[i]), int(chunks)))
+            for param, target_param in zip(model.parameters(), single_param):
+                param.data.copy_(target_param.clone())
+            prediction = model(train_tensor)
+            prediction.squeeze_()
+            loss = criterion(prediction, target_tensor)
+            losses.append(loss.item())
     return np.array(losses)
+
+def reshape_parameters(flattened_params, model):
+    reshaped_params = []
+    current_index = 0
+
+    # Iterate through the layers of the model
+    for param in model.parameters():
+        param_size = torch.prod(torch.tensor(param.shape)).item()
+        # Extract a chunk from flattened_params based on the size of the current layer's parameters
+        chunk = flattened_params[current_index:current_index + param_size]
+        # Convert the chunk to a tensor and reshape to match the shape of the current layer's parameters
+        reshaped_chunk = torch.tensor(chunk, dtype=param.dtype).view(param.shape)
+        # Append the reshaped chunk to the list of reshaped parameters
+        reshaped_params.append(reshaped_chunk)
+        # Update the current index for the next layer
+        current_index += param_size
+
+    return reshaped_params
 
 #process the data and get the train test split
 train_tensor, target_tensor = dn.processData()
@@ -64,9 +84,11 @@ train_tensor, target_tensor = dn.processData()
 #Model and optimiser
 model = MyNeuralNetwork()
 model.to(device)
-options = {'c1': 2, 'c2': 0.2, 'w':1.1, 'bounds':(100000,-100000)}
+#'bounds':(-2,2)
+options = {'c1':0.7, 'c2': 0.3, 'w':0.6, 'k':7, 'p':2,'init_pos':None}
 dimensions = calculate_dimensions(model)
-optimizer = ps.single.GlobalBestPSO(n_particles=1000, dimensions=dimensions, options=options)
+#print("Dimensions are:",dimensions)
+optimizer = ps.single.GeneralOptimizerPSO(n_particles=50, dimensions=dimensions, options=options, topology=ps.backend.topology.Ring())
 #print("Predictions",model(train_tensor))
 #print("Target", target_tensor)
 
@@ -74,14 +96,20 @@ train_tensor = train_tensor.to(device)
 target_tensor = target_tensor.float().to(device)
 #print(model(train_tensor))
 criterion = torch.nn.BCEWithLogitsLoss()
-cost, pos = optimizer.optimize(f, iters=400, verbose=3)
+cost, pos = optimizer.optimize(f, iters=300, verbose=3)
 # After training the model
+#set the model parameters to the best found
+reshaped_params = reshape_parameters(pos, model)
+with torch.no_grad():
+    for param, target_param in zip(model.parameters(), reshaped_params):
+        param.data.copy_(target_param.clone())
 
 with torch.no_grad():
     model.eval()  # Set the model to evaluation mode
     predictions = model(train_tensor)
     predictions.squeeze_()
     predictions = torch.sigmoid(predictions)
-    predictions = (predictions > 0.5).float()
-    calc_accuracy = BinaryAccuracy()
-    calc_accuracy(predictions, target_tensor)
+    #predictions = (predictions > 0.5).float()
+    acc = BinaryAccuracy().to(device)
+    calculated_acc = acc(predictions, target_tensor)
+    print(f'Accuracy of best model: {float(calculated_acc)}')

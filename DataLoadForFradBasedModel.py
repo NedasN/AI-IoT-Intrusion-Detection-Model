@@ -10,7 +10,6 @@ def processData():
 
     # Select the features to use
     data.drop(["ts", "src_ip", "dst_ip", "http_user_agent", "http_orig_mime_types", "ssl_version", "ssl_cipher", "ssl_subject", "ssl_issuer", "http_uri", "http_version", 'http_user_agent', "http_orig_mime_types", "http_resp_mime_types", "weird_notice", "type"], axis=1, inplace=True)
-
     #convert the string types of data into numeric categories
     #data = dn.StringsToCategories(data)
     protocol_map = {'tcp': 1, 'udp': 2, 'icmp': 3}
@@ -33,18 +32,7 @@ def processData():
 
     #print(data['weird_addl'].unique())
     #print(data['conn_state'].unique())
-    '''
-    # Split data into train/test(70/30) split
-    train, test = train_test_split(data, test_size=0.3, random_state=42, shuffle=True)
-    print("Split the dataset into train and test")
-    # Drop the labels from train data
-    labels = train['label']
-    train = train.drop(train.columns[-1], axis=1)
-    test = test.drop(test.columns[-1], axis=1)
-    #print(train.dtypes)
-    train_tensor = torch.tensor(train.values)
-    target_tensor = torch.tensor(labels.values)
-    '''
+    
     #print(data[data.columns[0]].count())
     data.drop(data[(data['duration'] > 12000)].index, inplace=True)
     #list_to_standardise = ['duration', 'src_bytes', 'dst_bytes', 'missed_bytes', 'src_pkts', 'dst_pkts', 'src_ip_bytes', 'dst_ip_bytes']
@@ -54,26 +42,39 @@ def processData():
         data[column] = (data[column] - data[column].mean()) / data[column].std()'''
     
 
-    '''list_to_normalise = ['duration', 'src_bytes', 'dst_bytes', 'missed_bytes', 'src_pkts', 'dst_pkts', 'src_ip_bytes', 'dst_ip_bytes']
+    list_to_normalise = ['duration', 'src_bytes', 'dst_bytes', 'missed_bytes', 'src_pkts', 'dst_pkts', 'src_ip_bytes', 'dst_ip_bytes']
     for column in list_to_normalise:
         data[column] = np.log1p(data[column])
-        data[column] = (data[column] - data[column].min()) / (data[column].max() - data[column].min())'''
+        data[column] = (data[column] - data[column].min()) / (data[column].max() - data[column].min())
     #print(data.head(5))
     #print(len(data.index))
+
+    # Split data into train/test(70/30) split
+    train, test = train_test_split(data, test_size=0.3, random_state=42, shuffle=True)
+    print("Split the dataset into train and test")
+    # Drop the labels from train data
+    train_target_tensor = torch.tensor(train['label'].values).float()
+    #train = train.drop(train.columns[-1], axis=1)
+    train.drop(['label'], axis=1, inplace=True)
+    test_target_tensor = torch.tensor(test['label'].values).float()
+    test.drop(['label'], axis=1, inplace=True)
+    train_tensor = torch.tensor(train.values).float()
+    test_tensor = torch.tensor(test.values).float()
+    #print(train.dtypes)
 
 
     #Get the tensor of the data as well as the tensor containing target values
     #duration_tensor = torch.tensor(data['duration'].values)
     #num_bins = int(duration_tensor.size(0) ** 0.5)
     #duration_discretized = torch.bucketize(duration_tensor, boundaries=torch.linspace(duration_tensor.min(), duration_tensor.max(), steps=num_bins))
-    target_tensor = torch.tensor(data['label'].values)
-    data.drop(['label'], axis=1, inplace=True)
+    #target_tensor = torch.tensor(data['label'].values)
+    #data.drop(['label'], axis=1, inplace=True)
     #data.drop(['duration'], axis=1, inplace=True)
-    train_tensor = torch.tensor(data.values, requires_grad=False).float()
+    #train_tensor = torch.tensor(data.values, requires_grad=False).float()
     #train_tensor = torch.cat((train_tensor, duration_discretized.unsqueeze(1)), 1)
     #print(train_tensor.dtype)
     #print(target_tensor.dtype)
-    return train_tensor, target_tensor
+    return train_tensor, train_target_tensor, test_tensor, test_target_tensor
 
 
 #_,tensor = processData()
