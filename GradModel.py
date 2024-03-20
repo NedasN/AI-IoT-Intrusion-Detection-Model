@@ -4,7 +4,7 @@ import torch.optim as optim
 import DataLoadForFradBasedModel as dn
 import DataNormalisation as wholeData
 import numpy as np
-from torchmetrics.classification import BinaryAccuracy
+from torchmetrics.classification import BinaryAccuracy, ConfusionMatrix
 #swap to pyswarm instead of toch_pso
 # Check if GPU is available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -17,10 +17,8 @@ class MyNeuralNetwork(nn.Module):
         self.layer1 = nn.Linear(30, 22, bias=True)  # First hidden layer with 70 neurons
         self.layer2 = nn.Linear(22, 14, bias=True)  # Second hidden layer with 58 neurons
         self.layer3 = nn.Linear(14, 6, bias=True)  # Third hidden layer with 42 neurons
-        self.layer4 = nn.Linear(6, 2, bias=True)  # fourth hidden layer with 34 neurons
-        #self.layer5 = nn.Linear(10, 6, bias=True)  # sixth hidden layer with 21 neurons
-        #self.layer6 = nn.Linear(6, 2, bias=True)  # seventh hidden layer with 16 neurons
-        self.layer8 = nn.Linear(2, 1, bias=True)    # output layer with 1 neuron
+        self.layer4 = nn.Linear(6, 2, bias=True)  # fourth hidden 
+        self.layer5 = nn.Linear(2, 1, bias=True)    # output layer with 1 neuron
 
     
     def forward(self, x):
@@ -31,7 +29,7 @@ class MyNeuralNetwork(nn.Module):
         x = activation(self.layer4(x))
         #x = torch.relu(self.layer5(x))
         #x = torch.relu(self.layer6(x))
-        x = self.layer8(x)
+        x = self.layer5(x)
         return x
 
 
@@ -45,7 +43,7 @@ train_tensor, train_target_tensor, test_tensor, test_target_tensor = dn.processD
 model = MyNeuralNetwork()
 model.to(device)
 
-num_epochs = 800
+num_epochs = 900
 params = {
     'batch_size': 2046,
     }
@@ -75,9 +73,6 @@ for epoch in range(num_epochs):
             running_loss = 0.0
     
     model.eval()
-    total_correct = 0
-    total_samples = 0
-
     with torch.no_grad():
         for inputs, labels in test_dataloader:
             inputs, labels = inputs.to(device), labels.to(device)
@@ -92,8 +87,11 @@ for epoch in range(num_epochs):
 
     print(f'Epoch {epoch + 1}, Validation Accuracy: {float(calculated_acc):.3f}')
 
+print('Finished Training')
+print('Starting Evaluation')
 # After training the model
 #find the accuracy for the best model and whole dataset
+#get the confusion matrix
 full_tensor, full_labels = wholeData.processData()
 full_tensor, full_labels = full_tensor.to(device), full_labels.to(device)
 with torch.no_grad():
@@ -104,5 +102,8 @@ with torch.no_grad():
     acc = BinaryAccuracy().to(device)
     calculated_acc = acc(predictions, full_labels)
     print(f'Accuracy of best model: {float(calculated_acc)}')
+    confusion_matrix = ConfusionMatrix(task = "binary", num_classes = 2)
+    matrix = confusion_matrix(predictions, full_labels)
+    print("ConfusionMatrix: " + str(matrix))
 
-print('Finished Training')
+print('Finished Evaluation')

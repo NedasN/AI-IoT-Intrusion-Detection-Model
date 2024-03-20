@@ -43,7 +43,7 @@ def calculate_dimensions(model):
 
 def f(x):
     n_particles = x.shape[0]
-    #n_particles = 50
+    print(n_particles)
     losses = []
     with torch.no_grad():
         chunks = sum([torch.numel(param) for param in model.parameters()])
