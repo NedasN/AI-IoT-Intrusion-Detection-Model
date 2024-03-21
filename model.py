@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.optim as optim
 import DataNormalisation as dn
 import numpy as np
-from torchmetrics.classification import BinaryAccuracy
+from torchmetrics.classification import BinaryAccuracy, ConfusionMatrix, BinaryRecall, BinaryPrecision, BinaryF1Score
 #swap to pyswarm instead of toch_pso
 # Check if GPU is available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -43,7 +43,7 @@ def calculate_dimensions(model):
 
 def f(x):
     n_particles = x.shape[0]
-    print(n_particles)
+    #print(n_particles)
     losses = []
     with torch.no_grad():
         chunks = sum([torch.numel(param) for param in model.parameters()])
@@ -53,8 +53,12 @@ def f(x):
                 param.data.copy_(target_param.clone())
             prediction = model(train_tensor)
             prediction.squeeze_()
-            loss = criterion(prediction, target_tensor)
-            losses.append(loss.item())
+            #loss = criterion(prediction, target_tensor)
+            f1 = BinaryAccuracy().to(device)
+            loss = float(f1(prediction, target_tensor))
+            #losses.append(loss.item())
+            loss = 1 - loss
+            losses.append(loss)
     return np.array(losses)
 
 def reshape_parameters(flattened_params, model):
@@ -77,6 +81,14 @@ def reshape_parameters(flattened_params, model):
 
 #process the data and get the train test split
 train_tensor, target_tensor = dn.processData()
+num_samples = len(train_tensor)
+
+# Generate a random permutation of indices
+permutation = torch.randperm(num_samples)
+
+# Shuffle both the dataset and labels using the same permutation
+train_tensor = train_tensor[permutation]
+target_tensor = target_tensor[permutation]
 #print(train.dtypes)
 #print(train.head())
 #print(train_tensor.dtype)
@@ -85,10 +97,12 @@ train_tensor, target_tensor = dn.processData()
 model = MyNeuralNetwork()
 model.to(device)
 #'bounds':(-2,2)
-options = {'c1':0.7, 'c2': 0.3, 'w':0.6, 'k':7, 'p':2,'init_pos':None}
+#'init_pos':None
+options = {'c1':1.5, 'c2': 1.2, 'w':0.9}
 dimensions = calculate_dimensions(model)
 #print("Dimensions are:",dimensions)
-optimizer = ps.single.GeneralOptimizerPSO(n_particles=50, dimensions=dimensions, options=options, topology=ps.backend.topology.Ring())
+# topology=ps.backend.topology.Random()
+optimizer = ps.single.GlobalBestPSO(n_particles=700, dimensions=dimensions, options=options)
 #print("Predictions",model(train_tensor))
 #print("Target", target_tensor)
 
@@ -96,7 +110,7 @@ train_tensor = train_tensor.to(device)
 target_tensor = target_tensor.float().to(device)
 #print(model(train_tensor))
 criterion = torch.nn.BCEWithLogitsLoss()
-cost, pos = optimizer.optimize(f, iters=300, verbose=3)
+cost, pos = optimizer.optimize(f, iters=500, verbose=3)
 # After training the model
 #set the model parameters to the best found
 reshaped_params = reshape_parameters(pos, model)
@@ -113,3 +127,24 @@ with torch.no_grad():
     acc = BinaryAccuracy().to(device)
     calculated_acc = acc(predictions, target_tensor)
     print(f'Accuracy of best model: {float(calculated_acc)}')
+
+    #calculate recall
+    recall = BinaryRecall().to(device)
+    calculated_recall = recall(predictions, target_tensor)
+    print(f'Recall of best model: {float(calculated_recall)}')
+
+    #calculate precision
+    precision = BinaryPrecision().to(device)
+    calculated_precision = precision(predictions, target_tensor)
+    print(f'Precision of best model: {float(calculated_precision)}')
+
+    #calculate f1 score
+    f1 = BinaryF1Score().to(device)
+    calculated_f1 = f1(predictions, target_tensor)
+    print(f'F1 score of best model: {float(calculated_f1)}')
+
+    #get the confusion matrix
+    confusion_matrix = ConfusionMatrix(task = "binary", num_classes = 2).to(device)
+    matrix = confusion_matrix(predictions, target_tensor)
+    print("ConfusionMatrix:" + str(matrix))
+

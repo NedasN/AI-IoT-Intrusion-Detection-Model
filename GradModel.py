@@ -4,7 +4,7 @@ import torch.optim as optim
 import DataLoadForFradBasedModel as dn
 import DataNormalisation as wholeData
 import numpy as np
-from torchmetrics.classification import BinaryAccuracy, ConfusionMatrix
+from torchmetrics.classification import BinaryAccuracy, ConfusionMatrix, BinaryRecall, BinaryPrecision, BinaryF1Score
 #swap to pyswarm instead of toch_pso
 # Check if GPU is available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -43,10 +43,16 @@ train_tensor, train_target_tensor, test_tensor, test_target_tensor = dn.processD
 model = MyNeuralNetwork()
 model.to(device)
 
-num_epochs = 900
+num_epochs = 1000
 params = {
-    'batch_size': 2046,
+    'batch_size': 460,
     }
+
+'''
+num_epochs = 450
+params = {
+    'batch_size': 1024,
+    }'''
 
 train_dataloader = torch.utils.data.DataLoader(list(zip(train_tensor, train_target_tensor)), **params)
 test_dataloader = torch.utils.data.DataLoader(list(zip(test_tensor, test_target_tensor)), **params)
@@ -68,9 +74,8 @@ for epoch in range(num_epochs):
         optimizer.step()
 
         running_loss += loss.item()
-        if i % 100 == 99:  # Print every 100 batches
-            print(f'Epoch {epoch + 1}, Batch {i + 1}, Loss: {running_loss / 100:.3f}')
-            running_loss = 0.0
+    print(f'Epoch {epoch + 1}, Loss: {running_loss / len(train_dataloader):.3f}')
+    running_loss = 0.0
     
     model.eval()
     with torch.no_grad():
@@ -84,8 +89,9 @@ for epoch in range(num_epochs):
             # Calculate accuracy
             acc = BinaryAccuracy().to(device)
             calculated_acc = acc(outputs, labels)
+        print(f'Epoch {epoch + 1}, Validation Loss: {loss:.3f}, Validation Accuracy: {float(calculated_acc):.3f}')
 
-    print(f'Epoch {epoch + 1}, Validation Accuracy: {float(calculated_acc):.3f}')
+    #print(f'Epoch {epoch + 1}, Validation Accuracy: {float(calculated_acc):.3f}')
 
 print('Finished Training')
 print('Starting Evaluation')
@@ -99,11 +105,31 @@ with torch.no_grad():
     predictions = model(full_tensor)
     predictions.squeeze_()
     predictions = torch.sigmoid(predictions)
+
+    #Calculate overall accuracy of the model
     acc = BinaryAccuracy().to(device)
     calculated_acc = acc(predictions, full_labels)
     print(f'Accuracy of best model: {float(calculated_acc)}')
-    confusion_matrix = ConfusionMatrix(task = "binary", num_classes = 2)
+
+    #calculate recall
+    recall = BinaryRecall().to(device)
+    calculated_recall = recall(predictions, full_labels)
+    print(f'Recall of best model: {float(calculated_recall)}')
+
+    #calculate precision
+    precision = BinaryPrecision().to(device)
+    calculated_precision = precision(predictions, full_labels)
+    print(f'Precision of best model: {float(calculated_precision)}')
+
+    #calculate f1 score
+    f1 = BinaryF1Score().to(device)
+    calculated_f1 = f1(predictions, full_labels)
+    print(f'F1 score of best model: {float(calculated_f1)}')
+
+    #get the confusion matrix
+    confusion_matrix = ConfusionMatrix(task = "binary", num_classes = 2).to(device)
     matrix = confusion_matrix(predictions, full_labels)
-    print("ConfusionMatrix: " + str(matrix))
+    print("ConfusionMatrix:" + str(matrix))
+
 
 print('Finished Evaluation')
