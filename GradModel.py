@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import DataLoadForFradBasedModel as dn
+import DataLoadForGradBasedModel as dn
 import DataNormalisation as wholeData
 import numpy as np
 from torchmetrics.classification import BinaryAccuracy, ConfusionMatrix, BinaryRecall, BinaryPrecision, BinaryF1Score
@@ -131,5 +131,12 @@ with torch.no_grad():
     matrix = confusion_matrix(predictions, full_labels)
     print("ConfusionMatrix:" + str(matrix))
 
-
 print('Finished Evaluation')
+
+print('Saving the model')
+file_path = 'TrainedGradModel.pth'
+
+# Save the entire model
+torch.save(model, file_path)
+
+print('Done')
