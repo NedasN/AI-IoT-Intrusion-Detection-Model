@@ -43,9 +43,9 @@ train_tensor, train_target_tensor, test_tensor, test_target_tensor = dn.processD
 model = MyNeuralNetwork()
 model.to(device)
 
-num_epochs = 1000
+num_epochs = 990
 params = {
-    'batch_size': 460,
+    'batch_size': 512,
     }
 
 '''
