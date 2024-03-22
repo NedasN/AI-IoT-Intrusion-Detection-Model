@@ -134,7 +134,7 @@ with torch.no_grad():
 print('Finished Evaluation')
 
 print('Saving the model')
-file_path = 'TrainedGradModel.pth'
+file_path = 'TrainedGradModelWithZScore.pth'
 
 # Save the entire model
 torch.save(model, file_path)

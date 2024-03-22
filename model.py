@@ -98,11 +98,15 @@ model = MyNeuralNetwork()
 model.to(device)
 #'bounds':(-2,2)
 #'init_pos':None
-options = {'c1':1.5, 'c2': 1.2, 'w':0.9}
+options = {'c1':1.2, 'c2': 1, 'w':0.8, 'k':30, 'p':1}
 dimensions = calculate_dimensions(model)
+lower_bound = np.array([-1] * dimensions)
+upper_bound = np.array([1] * dimensions)
+bounds = (lower_bound, upper_bound)
 #print("Dimensions are:",dimensions)
 # topology=ps.backend.topology.Random()
-optimizer = ps.single.GlobalBestPSO(n_particles=700, dimensions=dimensions, options=options)
+#optimizer = ps.single.GlobalBestPSO(n_particles=700, dimensions=dimensions, options=options, bounds=bounds)
+optimizer = ps.single.GeneralOptimizerPSO(n_particles=700, dimensions=dimensions, options=options, topology=ps.backend.topology.Ring(), bounds=bounds)
 #print("Predictions",model(train_tensor))
 #print("Target", target_tensor)
 
@@ -110,7 +114,7 @@ train_tensor = train_tensor.to(device)
 target_tensor = target_tensor.float().to(device)
 #print(model(train_tensor))
 criterion = torch.nn.BCEWithLogitsLoss()
-cost, pos = optimizer.optimize(f, iters=500, verbose=3)
+cost, pos = optimizer.optimize(f, iters=300, verbose=3)
 # After training the model
 #set the model parameters to the best found
 reshaped_params = reshape_parameters(pos, model)

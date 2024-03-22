@@ -137,3 +137,21 @@
 2024-03-21 00:30:06,026 - pyswarms.single.global_best - INFO - Optimize for 500 iters with {'c1': 1.5, 'c2': 1.2, 'w': 0.9}
 2024-03-21 00:38:14,161 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 0.3126373291015625, best pos: [-0.05216131  0.94847493  1.35353244 ...  1.73062733  2.36828037
  -0.30570438]
+2024-03-21 21:14:03,508 - pyswarms.single.global_best - INFO - Optimize for 300 iters with {'c1': 0.4, 'c2': 0.5, 'w': 0.9}
+2024-03-21 21:28:58,086 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 0.3126373291015625, best pos: [-0.05177446  0.75672511  1.09313624 ...  0.23455844  0.35078066
+  0.26566167]
+2024-03-21 21:54:49,015 - pyswarms.backend.generators - ERROR - Bounds and/or init_pos should be of size (1111,)
+Traceback (most recent call last):
+  File "C:\Users\Nedas\AppData\Local\Programs\Python\Python311\Lib\site-packages\pyswarms\backend\generators.py", line 74, in generate_swarm
+    lb, ub = bounds
+    ^^^^^^
+ValueError: too many values to unpack (expected 2)
+2024-03-21 21:58:12,000 - pyswarms.single.global_best - INFO - Optimize for 300 iters with {'c1': 0.4, 'c2': 0.5, 'w': 0.9}
+2024-03-21 22:13:53,150 - pyswarms.single.global_best - INFO - Optimization finished | best cost: 0.3126373291015625, best pos: [ 0.61751669  0.04648608 -0.36349269 ... -0.046091    0.32955539
+ -0.77004158]
+2024-03-21 22:39:16,107 - pyswarms.single.general_optimizer - INFO - Optimize for 300 iters with {'c1': 0.6, 'c2': 0.5, 'w': 0.8, 'k': 30}
+2024-03-21 22:40:48,204 - pyswarms.single.general_optimizer - INFO - Optimize for 300 iters with {'c1': 0.6, 'c2': 0.5, 'w': 0.8, 'k': 30}
+2024-03-21 22:41:32,420 - pyswarms.single.general_optimizer - INFO - Optimize for 300 iters with {'c1': 0.6, 'c2': 0.5, 'w': 0.8, 'k': 30, 'p': 1}
+2024-03-21 23:00:25,298 - pyswarms.single.general_optimizer - INFO - Optimization finished | best cost: 0.3126373291015625, best pos: [-0.16354195  0.03033743  0.64039272 ...  0.25162756 -0.22453234
+ -0.04234189]
+2024-03-21 23:45:08,568 - pyswarms.single.general_optimizer - INFO - Optimize for 300 iters with {'c1': 1.2, 'c2': 1, 'w': 0.8, 'k': 30, 'p': 1}
