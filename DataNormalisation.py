@@ -56,8 +56,8 @@ def processData():
 
     list_to_normalise = ['duration', 'src_bytes', 'dst_bytes', 'missed_bytes', 'src_pkts', 'dst_pkts', 'src_ip_bytes', 'dst_ip_bytes']
     for column in list_to_normalise:
-        #data[column] = np.log1p(data[column])
-        data[column] = (data[column] - data[column].min()) / (data[column].max() - data[column].min())
+        data[column] = np.log1p(data[column])
+        #data[column] = (data[column] - data[column].min()) / (data[column].max() - data[column].min())
     #print(data.head(5))
     #print(len(data.index))
 
