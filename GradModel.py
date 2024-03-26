@@ -43,7 +43,7 @@ train_tensor, train_target_tensor, test_tensor, test_target_tensor = dn.processD
 model = MyNeuralNetwork()
 model.to(device)
 
-num_epochs = 990
+num_epochs = 900
 params = {
     'batch_size': 512,
     }
@@ -134,7 +134,7 @@ with torch.no_grad():
 print('Finished Evaluation')
 
 print('Saving the model')
-file_path = 'TrainedGradModelWithZScore.pth'
+file_path = 'LongertrainedModel.pth'
 
 # Save the entire model
 torch.save(model, file_path)
