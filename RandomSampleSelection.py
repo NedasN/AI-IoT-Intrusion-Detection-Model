@@ -3,7 +3,7 @@ import random
 import numpy as np
 import torch
 def getRandomSamples():
-    p = 0.00065  # 300-sh lines from our dataset
+    p = 0.01  # 4000-sh lines from our dataset
     # keep the header, then take only 1% of lines
     # if random from [0,1] interval is greater than 0.01 the row will be skipped
     df = pd.read_csv(

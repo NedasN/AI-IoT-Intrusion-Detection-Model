@@ -14,15 +14,12 @@ class MyNeuralNetwork(nn.Module):
         self.layer4 = nn.Linear(6, 2, bias=True)  # fourth hidden 
         self.layer5 = nn.Linear(2, 1, bias=True)    # output layer with 1 neuron
 
-    
     def forward(self, x):
         activation = nn.LeakyReLU(0.1)
         x = activation(self.layer1(x))
         x = activation(self.layer2(x))
         x = activation(self.layer3(x))
         x = activation(self.layer4(x))
-        #x = torch.relu(self.layer5(x))
-        #x = torch.relu(self.layer6(x))
         x = self.layer5(x)
         return x
 
@@ -30,8 +27,8 @@ class MyNeuralNetwork(nn.Module):
 randomSamples, targets = rss.getRandomSamples()
 
 # Load the model
-model = torch.load('LessTrainedModel.pth')
-
+#model = torch.load('LessTrainedModel.pth')
+model = torch.load('LessTrainedModel.pth', map_location=torch.device('cpu'))
 model.to(device)
 randomSamples = randomSamples.to(device)
 targets = targets.to(device)
