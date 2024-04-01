@@ -17,8 +17,8 @@ class MyNeuralNetwork(nn.Module):
         self.layer1 = nn.Linear(30, 22, bias=True)  # First hidden layer with 70 neurons
         self.layer2 = nn.Linear(22, 16, bias=True)  # Second hidden layer with 58 neurons
         self.layer3 = nn.Linear(16, 14, bias=True)  # Third hidden layer with 42 neurons
-        self.layer4 = nn.Linear(14, 10, bias=True)  # fourth hidden 
-        #self.layer5 = nn.Linear(2, 10, bias=True)    # output layer with 10 neuron
+        self.layer4 = nn.Linear(14, 12, bias=True)  # fourth hidden 
+        self.layer5 = nn.Linear(12, 10, bias=True)    # output layer with 10 neuron
 
     
     def forward(self, x):
@@ -27,10 +27,10 @@ class MyNeuralNetwork(nn.Module):
         x = activation(self.layer1(x))
         x = activation(self.layer2(x))
         x = activation(self.layer3(x))
-        #x = activation(self.layer4(x))
+        x = activation(self.layer4(x))
         #x = torch.relu(self.layer5(x))
         #x = torch.relu(self.layer6(x))
-        x = self.layer4(x)
+        x = self.layer5(x)
         return output_activation(x)
 
 
@@ -127,11 +127,11 @@ with torch.no_grad():
     print("ConfusionMatrix:" + str(matrix))
 
 print('Finished Evaluation')
-
+'''
 print('Saving the model')
 file_path = 'MulticlassModel.pth'
 
 # Save the entire model
 torch.save(model, file_path)
 
-print('Done')
+print('Done')'''

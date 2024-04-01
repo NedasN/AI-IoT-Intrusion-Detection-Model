@@ -1,4 +1,5 @@
 import RandomSampleSelection as rss
+import DataNormalisation as wholeData
 import torch
 import torch.nn as nn
 from torchmetrics.classification import BinaryAccuracy, ConfusionMatrix, BinaryRecall, BinaryPrecision, BinaryF1Score
@@ -23,19 +24,34 @@ class MyNeuralNetwork(nn.Module):
         x = self.layer5(x)
         return x
 
-# Get the random packets form dataset
-randomSamples, targets = rss.getRandomSamples()
 
-# Load the model
-#model = torch.load('LessTrainedModel.pth')
-model = torch.load('LessTrainedModel.pth', map_location=torch.device('cpu'))
-model.to(device)
-randomSamples = randomSamples.to(device)
-targets = targets.to(device)
+def randomSubSet():
+    # Get the random packets form dataset
+    randomSamples, targets = rss.getRandomSamples()
+
+    # Load the model
+    #model = torch.load('LessTrainedModel.pth')
+    model = torch.load('LessTrainedModel.pth', map_location=torch.device('cpu'))
+    model.to(device)
+    randomSamples = randomSamples.to(device)
+    targets = targets.to(device)
+    return model, randomSamples, targets
+
+def WholeDataset():
+    data, targets = wholeData.processData()
+    # Load the model
+    model = torch.load('LessTrainedModel.pth')
+    model.to(device)
+    data = data.to(device)
+    targets = targets.to(device)
+    return model, data, targets
+
+#model,data,targets = randomSubSet()
+model,data,targets = WholeDataset()
 # Evaluate the model
 with torch.no_grad():
     model.eval()  # Set the model to evaluation mode
-    predictions = model(randomSamples)
+    predictions = model(data)
     predictions.squeeze_()
     predictions = torch.sigmoid(predictions)
 
