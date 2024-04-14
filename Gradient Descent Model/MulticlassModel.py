@@ -14,9 +14,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #print(torch.cuda.is_available())
 
 # Define the model
-class MyNeuralNetwork(nn.Module):
+class MulticlassNeuralNetwork(nn.Module):
     def __init__(self):
-        super(MyNeuralNetwork, self).__init__()
+        super(MulticlassNeuralNetwork, self).__init__()
         self.layer1 = nn.Linear(30, 22, bias=True)  # First hidden layer with 70 neurons
         self.layer2 = nn.Linear(22, 16, bias=True)  # Second hidden layer with 58 neurons
         self.layer3 = nn.Linear(16, 14, bias=True)  # Third hidden layer with 42 neurons
@@ -39,7 +39,7 @@ class MyNeuralNetwork(nn.Module):
 train_tensor, train_target_tensor, test_tensor, test_target_tensor = dn.processData()
 
 #Model and optimiser
-model = MyNeuralNetwork()
+model = MulticlassNeuralNetwork()
 model.to(device)
 
 num_epochs = 700
@@ -125,11 +125,11 @@ with torch.no_grad():
     print("ConfusionMatrix:" + str(matrix))
 
 print('Finished Evaluation')
-'''
-print('Saving the model')
-file_path = 'MulticlassModel.pth'
+
+'''print('Saving the model')
+file_path = 'Gradient Descent Model/MulticlassModelWeights.pth'
 
 # Save the entire model
-torch.save(model, file_path)
-
-print('Done')'''
+torch.save(model.state_dict(), file_path)
+'''
+print('Done')

@@ -6,7 +6,7 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-def getRandomSamples():
+def getRandomSamples(task):
     p = 0.01  # 4000-sh lines from our dataset
     # keep the header, then take only 1% of lines
     # if random from [0,1] interval is greater than 0.01 the row will be skipped
@@ -15,8 +15,12 @@ def getRandomSamples():
             header=0, 
             skiprows=lambda i: i>0 and random.random() > p
     )
-    
-    df.drop(["ts", "src_ip", "dst_ip", "http_user_agent", "http_orig_mime_types", "ssl_version", "ssl_cipher", "ssl_subject", "ssl_issuer", "http_uri", "http_version", 'http_user_agent', "http_orig_mime_types", "http_resp_mime_types", "weird_notice", "type"], axis=1, inplace=True)
+    #Select correct label type for the task
+    if task == 'binary':
+        df.drop(["ts", "src_ip", "dst_ip", "http_user_agent", "http_orig_mime_types", "ssl_version", "ssl_cipher", "ssl_subject", "ssl_issuer", "http_uri", "http_version", 'http_user_agent', "http_orig_mime_types", "http_resp_mime_types", "weird_notice", "type"], axis=1, inplace=True)
+    elif task == 'multiclass':
+        df.drop(["ts", "src_ip", "dst_ip", "http_user_agent", "http_orig_mime_types", "ssl_version", "ssl_cipher", "ssl_subject", "ssl_issuer", "http_uri", "http_version", 'http_user_agent', "http_orig_mime_types", "http_resp_mime_types", "weird_notice", "label"], axis=1, inplace=True)
+
     #convert the string types of data into numeric categories
     #data = dn.StringsToCategories(data)
     protocol_map = {'tcp': 1, 'udp': 2, 'icmp': 3}
@@ -37,12 +41,21 @@ def getRandomSamples():
     df['weird_addl'] = df['weird_addl'].replace({'-': 0}, regex=True)
     df['weird_addl'] = df['weird_addl'].astype(int)
 
+    #if the task if multicalss then each label needs a numeric value
+    if task == 'multiclass':
+        df['type'] = df['type'].replace({'normal': 0, 'scanning': 1, 'dos': 2, 'ddos': 3, 'backdoor': 4, 'injection': 5, 'mitm': 6, 'password': 7, 'ransomware': 8, 'xss': 9}, regex=True)
+
     list_to_normalise = ['duration', 'src_bytes', 'dst_bytes', 'missed_bytes', 'src_pkts', 'dst_pkts', 'src_ip_bytes', 'dst_ip_bytes']
     for column in list_to_normalise:
         df[column] = np.log1p(df[column])
 
-    targets = torch.tensor(df['label'].values)
-    df.drop(['label'], axis=1, inplace=True)
+    if task == 'binary':
+        targets = torch.tensor(df['label'].values)
+        df.drop(['label'], axis=1, inplace=True)
+    elif task == 'multiclass':
+        targets = torch.tensor(df['type'].values)
+        df.drop(['type'], axis=1, inplace=True)
+
     randomSamples = torch.tensor(df.values, requires_grad=False).float()
-    
+
     return randomSamples, targets

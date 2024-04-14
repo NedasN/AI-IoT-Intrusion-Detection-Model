@@ -26,9 +26,10 @@ class MyNeuralNetwork(nn.Module):
     
     def forward(self, x):
         activation = nn.LeakyReLU(0.1)
+        sigmoid_activation = nn.Sigmoid()
         x = activation(self.layer1(x))
-        x = activation(self.layer2(x))
-        x = activation(self.layer3(x))
+        x = sigmoid_activation(self.layer2(x))
+        x = sigmoid_activation(self.layer3(x))
         x = activation(self.layer4(x))
         x = self.layer5(x)
         return x
@@ -41,7 +42,7 @@ train_tensor, train_target_tensor, test_tensor, test_target_tensor = dn.processD
 model = MyNeuralNetwork()
 model.to(device)
 
-num_epochs = 700
+num_epochs = 800
 params = {
     'batch_size': 512,
     }
@@ -124,11 +125,11 @@ with torch.no_grad():
     print("ConfusionMatrix:" + str(matrix))
 
 print('Finished Evaluation')
-'''
+
 print('Saving the model')
-file_path = 'BinaryGradWeights.pt'
+file_path = 'SigmoidActModelWeights.pth'
 
 # Save the entire model
 torch.save(model.state_dict(), file_path)
-'''
+
 print('Done')
